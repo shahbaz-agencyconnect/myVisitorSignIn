@@ -2,13 +2,14 @@ package PageObjects;
 
 import AbstractComponents.AbstractComponents;
 import org.openqa.selenium.*;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.FileNotFoundException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Merchandiser extends AbstractComponents {
@@ -95,24 +96,26 @@ public class Merchandiser extends AbstractComponents {
     WebElement takePhotoBtn;
 
 
-    public void merchandiserSigIn() throws InterruptedException {
-        String storeId = "1023";
-        String storeName = "Reliance";
-        String email = "dusty.purdy@gmail.com";
-        String inductionNumber = "254789";
-        String company = "Reliance Merchandising";
-        String fName = "Dusty";
-        String lName = "Purdy";
-        String phone = "0456789123";
+    public void merchandiserSigIn() throws InterruptedException, FileNotFoundException {
+        ArrayList<String> data =excelRead("Merchandiser");
+        String storeId = data.get(0);
+        String storeName = data.get(1);
+        String email = data.get(2);
+        String inductionNumber = data.get(3);
+        String company = data.get(4);
+        String fName = data.get(5);
+        String lName = data.get(6);
+        String phone = data.get(7);
 
         String xpath = "//button[contains(@class,'mantine-DatePickerInput-monthsListControl')]";
-        String year = "2026";
-        String month = "4";
-        String day = "15";
+        String year = data.get(8);
+        String month = data.get(9);
+        String day = data.get(10);
         String date = String.format(
                 "//button[contains(@class, 'mantine-DatePickerInput-day') and normalize-space()='%s' and not(@disabled) and not(@data-outside='true')]",
                 day);
         String nextButton = "button.mantine-DatePickerInput-calendarHeaderControl[data-direction='next'] > svg";
+        String reasonToVisit=data.get(11);
 
         safeType(By.cssSelector("input[placeholder='Search by Store ID or Store Name']"), storeId);
         wait.until(ExpectedConditions.elementToBeClickable(searchButton));
@@ -133,7 +136,7 @@ public class Merchandiser extends AbstractComponents {
         wait.until(ExpectedConditions.visibilityOf(companyInput)).sendKeys(company);
         firstNameInput.sendKeys(fName);
         lastNameInput.sendKeys(lName);
-        phoneInput.sendKeys(phone);
+        phoneInput.sendKeys("0"+phone);
 
         datePickerTrigger.click();
         selectCurrentYear.click();
@@ -161,12 +164,11 @@ public class Merchandiser extends AbstractComponents {
         wait.until(ExpectedConditions.visibilityOf(modalBody));
         scrollToElement();
         wait.until(ExpectedConditions.elementToBeClickable(iAgreeButton)).click();
-
         signInBtn.click();
 
         // 2. Identify which modal appeared
-// We use a small Wait to ensure the DOM has updated
-//        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        // We use a small Wait to ensure the DOM has updated
+        // WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
         By existingAccountHeader = By.xpath("//h2[text()='Account Already Exists']");
         By confirmationHeader = By.xpath("//h2[text()='New Sign In Confirmation']");
@@ -202,38 +204,34 @@ public class Merchandiser extends AbstractComponents {
                 System.out.println("Flow: Do you have any Change?");
                 wait.until(ExpectedConditions.elementToBeClickable(noBtn)).click();
                 waitForWebElementToAppear(driver.findElement(By.xpath("//label[text()='Inspection of Stock']")));
-                driver.findElement(By.xpath("//label[text()='Inspection of Stock']")).click();
-//            Thread.sleep(5000);
-                wait.until(driver -> {
-                    // JavaScript check:
-                    // readyState 4 = Have Enough Data (playing)
-                    // currentTime > 0 = The video has actually started moving
-                    Boolean isPlaying = (Boolean) ((JavascriptExecutor) driver).executeScript(
-                            "return arguments[0].readyState === 4 && arguments[0].currentTime > 0;",
-                            driver.findElement(By.cssSelector("video.size-\\[230px\\]"))
-                    );
-                    return isPlaying;
-                });
-                takePhotoBtn.click();
+                driver.findElement(By.xpath("//label[text()='"+reasonToVisit+"']")).click();
+
+                //select the reason of visit
+                By safetyWorkMethod = By.xpath("//label[text()='You have a valid Safety Work Method Statement and understand the carton movement notice']");
+                if (isElementPresent(safetyWorkMethod)) {
+                    wait.until(ExpectedConditions.elementToBeClickable(safetyWorkMethod)).click();
+                    verifyBtn.click();
+                    takeMyPhoto();
+                } else {
+                    takeMyPhoto();
+                }
             } else if (isElementPresent(confirmationHeader)) {
-                System.out.println("Flow: Already Signed In");
+                System.out.println("Flow: Already Signed In at sometimes before");
 
                 wait.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
                 wait.until(ExpectedConditions.elementToBeClickable(noBtn)).click();
+                //select the reason of visit
                 waitForWebElementToAppear(driver.findElement(By.xpath("//label[text()='Inspection of Stock']")));
-                driver.findElement(By.xpath("//label[text()='Inspection of Stock']")).click();
-//            Thread.sleep(5000);
-                wait.until(driver -> {
-                    // JavaScript check:
-                    // readyState 4 = Have Enough Data (playing)
-                    // currentTime > 0 = The video has actually started moving
-                    Boolean isPlaying = (Boolean) ((JavascriptExecutor) driver).executeScript(
-                            "return arguments[0].readyState === 4 && arguments[0].currentTime > 0;",
-                            driver.findElement(By.cssSelector("video.size-\\[230px\\]"))
-                    );
-                    return isPlaying;
-                });
-                takePhotoBtn.click();
+                driver.findElement(By.xpath("//label[text()='"+reasonToVisit+"']")).click();
+                By safetyWorkMethod = By.xpath("//label[text()='You have a valid Safety Work Method Statement and understand the carton movement notice']");
+                if (isElementPresent(safetyWorkMethod)) {
+                    wait.until(ExpectedConditions.elementToBeClickable(safetyWorkMethod)).click();
+                    verifyBtn.click();
+                    takeMyPhoto();
+                } else {
+                    takeMyPhoto();
+                }
+//
             }
             // Add logic here to continue with the login password flow
         } else if (isElementPresent(confirmationHeader)) {
@@ -242,22 +240,19 @@ public class Merchandiser extends AbstractComponents {
             wait.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
             wait.until(ExpectedConditions.elementToBeClickable(noBtn)).click();
             waitForWebElementToAppear(driver.findElement(By.xpath("//label[text()='Inspection of Stock']")));
-            driver.findElement(By.xpath("//label[text()='Inspection of Stock']")).click();
-//            Thread.sleep(5000);
-            wait.until(driver -> {
-                // JavaScript check:
-                // readyState 4 = Have Enough Data (playing)
-                // currentTime > 0 = The video has actually started moving
-                Boolean isPlaying = (Boolean) ((JavascriptExecutor) driver).executeScript(
-                        "return arguments[0].readyState === 4 && arguments[0].currentTime > 0;",
-                        driver.findElement(By.cssSelector("video.size-\\[230px\\]"))
-                );
-                return isPlaying;
-            });
-            takePhotoBtn.click();
+            driver.findElement(By.xpath("//label[text()='"+reasonToVisit+"']")).click();
+            By safetyWorkMethod = By.xpath("//label[text()='You have a valid Safety Work Method Statement and understand the carton movement notice']");
+            if (isElementPresent(safetyWorkMethod)) {
+                wait.until(ExpectedConditions.elementToBeClickable(safetyWorkMethod)).click();
+                verifyBtn.click();
+                takeMyPhoto();
+            } else {
+                takeMyPhoto();
+            }
+
 
         } else if (isElementPresent(otpHeader)) {
-            System.out.println("Flow: OTP Verification Required");
+            System.out.println("Flow: New Sig In with  OTP Verification Required");
 
             // Fetch your OTP (using the Twilio logic we discussed)
             String otp = "999999";
@@ -272,20 +267,20 @@ public class Merchandiser extends AbstractComponents {
 
             // Click Verify
             driver.findElement(By.xpath("//span[text()='Verify']")).click();
-            waitForWebElementToAppear(driver.findElement(By.xpath("//label[text()='Inspection of Stock']")));
-            driver.findElement(By.xpath("//label[text()='Inspection of Stock']")).click();
-//            Thread.sleep(5000);
-            wait.until(driver -> {
-                // JavaScript check:
-                // readyState 4 = Have Enough Data (playing)
-                // currentTime > 0 = The video has actually started moving
-                Boolean isPlaying = (Boolean) ((JavascriptExecutor) driver).executeScript(
-                        "return arguments[0].readyState === 4 && arguments[0].currentTime > 0;",
-                        driver.findElement(By.cssSelector("video.size-\\[230px\\]"))
-                );
-                return isPlaying;
-            });
-            takePhotoBtn.click();
+            waitForWebElementToAppear(driver.findElement(By.xpath("//div[text()='Please select the reason of your visit today?']")));
+
+            //select the reason of visit
+
+            driver.findElement(By.xpath("//label[text()='"+reasonToVisit+"']")).click();
+            By safetyWorkMethod = By.xpath("//label[text()='You have a valid Safety Work Method Statement and understand the carton movement notice']");
+            if (isElementPresent(safetyWorkMethod)) {
+                wait.until(ExpectedConditions.elementToBeClickable(safetyWorkMethod)).click();
+                verifyBtn.click();
+                takeMyPhoto();
+            } else {
+                takeMyPhoto();
+            }
+
         } else {
             throw new RuntimeException("Neither OTP nor Existing Account modal appeared!");
         }
@@ -337,5 +332,20 @@ public class Merchandiser extends AbstractComponents {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public void takeMyPhoto() {
+        takePhotoBtn.click();
+        wait.until(driver -> {
+            // JavaScript check:
+            // readyState 4 = Have Enough Data (playing)
+            // currentTime > 0 = The video has actually started moving
+            Boolean isPlaying = (Boolean) ((JavascriptExecutor) driver).executeScript(
+                    "return arguments[0].readyState === 4 && arguments[0].currentTime > 0;",
+                    driver.findElement(By.cssSelector("video.size-\\[230px\\]"))
+            );
+            return isPlaying;
+        });
+        takePhotoBtn.click();
     }
 }

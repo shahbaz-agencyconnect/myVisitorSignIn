@@ -1,5 +1,11 @@
 package AbstractComponents;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.util.NumberToTextConverter;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openqa.selenium.By;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
@@ -7,7 +13,13 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class AbstractComponents {
@@ -109,5 +121,45 @@ public class AbstractComponents {
             }
         }
         throw new RuntimeException("Could not interact with element after 3 attempts due to staleness.");
+    }
+
+    public ArrayList<String> excelRead(String sheetName) {
+        ArrayList<String> a = new ArrayList<>();
+        String path = "H:\\ColesMyVisitor\\DataProvider\\DataSheets.xlsx";
+
+        // Use try-with-resources to auto-close the file stream
+        try (FileInputStream fis = new FileInputStream(path);
+             XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
+
+            int sheets = workbook.getNumberOfSheets();
+            for (int i = 0; i < sheets; i++) {
+                if (workbook.getSheetName(i).equalsIgnoreCase(sheetName)) { // Ignore case for safety
+                    XSSFSheet sheet = workbook.getSheetAt(i);
+                    Iterator<Row> rows = sheet.iterator();
+
+                    if (!rows.hasNext()) break; // Exit if sheet is completely empty
+                    rows.next(); // Skip header row
+
+                    while (rows.hasNext()) {
+                        Row r = rows.next();
+                        // Use a standard for-loop for cells to handle empty cells better
+                        for (int cn = 0; cn < r.getLastCellNum(); cn++) {
+                            Cell cell = r.getCell(cn, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+                            if (cell.getCellType() == CellType.STRING) {
+                                a.add(cell.getStringCellValue());
+                            } else if (cell.getCellType() == CellType.NUMERIC) {
+                                a.add(NumberToTextConverter.toText(cell.getNumericCellValue()));
+                            } else {
+                                a.add(""); // Add empty string for blank cells to keep list size consistent
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return a;
     }
 }

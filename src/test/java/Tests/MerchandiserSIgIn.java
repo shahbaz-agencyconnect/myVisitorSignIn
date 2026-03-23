@@ -21,5 +21,4 @@ public class MerchandiserSIgIn extends BaseTest {
         Merchandiser merchandiser = new Merchandiser(driver);
         merchandiser.merchandiserSigIn();
     }
-
 }
