@@ -97,7 +97,7 @@ public class Merchandiser extends AbstractComponents {
 
 
     public void merchandiserSigIn() throws InterruptedException, FileNotFoundException {
-        ArrayList<String> data =excelRead("Merchandiser");
+        ArrayList<String> data = excelRead("Merchandiser");
         String storeId = data.get(0);
         String storeName = data.get(1);
         String email = data.get(2);
@@ -115,7 +115,7 @@ public class Merchandiser extends AbstractComponents {
                 "//button[contains(@class, 'mantine-DatePickerInput-day') and normalize-space()='%s' and not(@disabled) and not(@data-outside='true')]",
                 day);
         String nextButton = "button.mantine-DatePickerInput-calendarHeaderControl[data-direction='next'] > svg";
-        String reasonToVisit=data.get(11);
+        String reasonToVisit = data.get(11);
 
         safeType(By.cssSelector("input[placeholder='Search by Store ID or Store Name']"), storeId);
         wait.until(ExpectedConditions.elementToBeClickable(searchButton));
@@ -136,7 +136,7 @@ public class Merchandiser extends AbstractComponents {
         wait.until(ExpectedConditions.visibilityOf(companyInput)).sendKeys(company);
         firstNameInput.sendKeys(fName);
         lastNameInput.sendKeys(lName);
-        phoneInput.sendKeys("0"+phone);
+        phoneInput.sendKeys("0" + phone);
 
         datePickerTrigger.click();
         selectCurrentYear.click();
@@ -179,32 +179,55 @@ public class Merchandiser extends AbstractComponents {
         if (isElementPresent(existingAccountHeader)) {
             System.out.println("Flow: Existing Account Detected");
             // Click 'Yes' to sign in
-            wait.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
-            waitForWebElementToAppear(driver.findElement(By.xpath("//label[text()='Store']")));
+
+            String actionBtn = "Yes";
+            if (actionBtn.equalsIgnoreCase("Yes")) {
+                wait.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
+                waitForWebElementToAppear(driver.findElement(By.xpath("//label[text()='Store']")));
 //        wait.until(ExpectedConditions.elementToBeClickable(siteDetailCheckbox)).click();
 
-            siteDetailCheckbox.click();
-            wait.until(ExpectedConditions.visibilityOf(modalBody));
-            scrollToElement();
-            wait.until(ExpectedConditions.elementToBeClickable(iAgreeButton)).click();
+                siteDetailCheckbox.click();
+                wait.until(ExpectedConditions.visibilityOf(modalBody));
+                scrollToElement();
+                wait.until(ExpectedConditions.elementToBeClickable(iAgreeButton)).click();
 
-            hazardUpdateCheckbox.click();
-            wait.until(ExpectedConditions.visibilityOf(modalBody));
-            scrollToElement();
-            wait.until(ExpectedConditions.elementToBeClickable(iAgreeButton)).click();
+                hazardUpdateCheckbox.click();
+                wait.until(ExpectedConditions.visibilityOf(modalBody));
+                scrollToElement();
+                wait.until(ExpectedConditions.elementToBeClickable(iAgreeButton)).click();
 
-            wagesCheckbox.click();
-            wait.until(ExpectedConditions.visibilityOf(modalBody));
-            scrollToElement();
-            wait.until(ExpectedConditions.elementToBeClickable(iAgreeButton)).click();
+                wagesCheckbox.click();
+                wait.until(ExpectedConditions.visibilityOf(modalBody));
+                scrollToElement();
+                wait.until(ExpectedConditions.elementToBeClickable(iAgreeButton)).click();
 
-            signInBtn.click();
+                signInBtn.click();
+                wait.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
+                wait.until(ExpectedConditions.elementToBeClickable(noBtn)).click();
+                waitForWebElementToAppear(driver.findElement(By.xpath("//label[text()='Inspection of Stock']")));
+                driver.findElement(By.xpath("//label[text()='" + reasonToVisit + "']")).click();
+                By safetyWorkMethod = By.xpath("//label[text()='You have a valid Safety Work Method Statement and understand the carton movement notice']");
+                if (isElementPresent(safetyWorkMethod)) {
+                    wait.until(ExpectedConditions.elementToBeClickable(safetyWorkMethod)).click();
+                    verifyBtn.click();
+                    takeMyPhoto();
+                } else {
+                    takeMyPhoto();
+                }
+
+            } else if (actionBtn.equalsIgnoreCase("No")) {
+                WebElement noBtn = driver.findElement(By.xpath("//span[text()='No']/ancestor::button"));
+                noBtn.click();
+                wait.until(ExpectedConditions.invisibilityOfElementLocated(By.className("mantine-Modal-content")));
+                System.out.println("Returned to previous state.");
+            }
+
             //Condition
             if (isElementPresent(changeDetailsHeader)) {
                 System.out.println("Flow: Do you have any Change?");
                 wait.until(ExpectedConditions.elementToBeClickable(noBtn)).click();
                 waitForWebElementToAppear(driver.findElement(By.xpath("//label[text()='Inspection of Stock']")));
-                driver.findElement(By.xpath("//label[text()='"+reasonToVisit+"']")).click();
+                driver.findElement(By.xpath("//label[text()='" + reasonToVisit + "']")).click();
 
                 //select the reason of visit
                 By safetyWorkMethod = By.xpath("//label[text()='You have a valid Safety Work Method Statement and understand the carton movement notice']");
@@ -222,7 +245,7 @@ public class Merchandiser extends AbstractComponents {
                 wait.until(ExpectedConditions.elementToBeClickable(noBtn)).click();
                 //select the reason of visit
                 waitForWebElementToAppear(driver.findElement(By.xpath("//label[text()='Inspection of Stock']")));
-                driver.findElement(By.xpath("//label[text()='"+reasonToVisit+"']")).click();
+                driver.findElement(By.xpath("//label[text()='" + reasonToVisit + "']")).click();
                 By safetyWorkMethod = By.xpath("//label[text()='You have a valid Safety Work Method Statement and understand the carton movement notice']");
                 if (isElementPresent(safetyWorkMethod)) {
                     wait.until(ExpectedConditions.elementToBeClickable(safetyWorkMethod)).click();
@@ -231,7 +254,6 @@ public class Merchandiser extends AbstractComponents {
                 } else {
                     takeMyPhoto();
                 }
-//
             }
             // Add logic here to continue with the login password flow
         } else if (isElementPresent(confirmationHeader)) {
@@ -240,7 +262,7 @@ public class Merchandiser extends AbstractComponents {
             wait.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
             wait.until(ExpectedConditions.elementToBeClickable(noBtn)).click();
             waitForWebElementToAppear(driver.findElement(By.xpath("//label[text()='Inspection of Stock']")));
-            driver.findElement(By.xpath("//label[text()='"+reasonToVisit+"']")).click();
+            driver.findElement(By.xpath("//label[text()='" + reasonToVisit + "']")).click();
             By safetyWorkMethod = By.xpath("//label[text()='You have a valid Safety Work Method Statement and understand the carton movement notice']");
             if (isElementPresent(safetyWorkMethod)) {
                 wait.until(ExpectedConditions.elementToBeClickable(safetyWorkMethod)).click();
@@ -271,7 +293,7 @@ public class Merchandiser extends AbstractComponents {
 
             //select the reason of visit
 
-            driver.findElement(By.xpath("//label[text()='"+reasonToVisit+"']")).click();
+            driver.findElement(By.xpath("//label[text()='" + reasonToVisit + "']")).click();
             By safetyWorkMethod = By.xpath("//label[text()='You have a valid Safety Work Method Statement and understand the carton movement notice']");
             if (isElementPresent(safetyWorkMethod)) {
                 wait.until(ExpectedConditions.elementToBeClickable(safetyWorkMethod)).click();
